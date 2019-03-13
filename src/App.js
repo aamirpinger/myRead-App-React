@@ -6,13 +6,26 @@ import SearchComponent from './SearchComponent'
 
 class BooksApp extends React.Component {
   state = {
-    showSearchPage: false
+    showSearchPage: false,
+    currentlyReading: [],
+    wantToRead: [],
+    read: [],
+    searchResult: [],
+    searchTerm: '',
+
   }
 
-  componentDidMount() {
+
+  getAllBooksArray = () => {
+    let tempArray = [...this.state.currentlyReading, ...this.state.wantToRead, ...this.state.read]
+    return tempArray
+
+
+  }
+  getAlltToState = () => {
+
     BooksAPI.getAll()
       .then((books) => {
-
         let wantToRead = [],
           read = [],
           currentlyReading = []
@@ -40,52 +53,110 @@ class BooksApp extends React.Component {
           wantToRead,
           read
         })
+        this.findBooks(this.state.searchTerm)
       })
-      .catch( (err) => {
+      .catch((err) => {
         console.log("Error fetching data", err)
       })
   }
 
 
+  // shelfChangeHandler = (elementId, bookId, currentShelf, newShelf) => {
+  //   let tempNewShelf = []
 
-  shelfChangeHandler = (elementId, bookId, currentShelf, newShelf) => {
-    let tempCurrentShelf = [...this.state[currentShelf]]
-    let tempNewShelf = []
+  //   if (currentShelf === 'none') {
+  //     tempNewShelf = [...this.state[newShelf]]
 
-    BooksAPI.update({ id: bookId }, newShelf)
-      .then((updatedRec) => {
-        console.log("Book updated at backend")
-        if (newShelf !== 'none') {
-          tempNewShelf = [...this.state[newShelf]]
+  //     BooksAPI.get(bookId)
+  //       .then((book) => {
 
-          tempCurrentShelf[elementId] = {
-            ...tempCurrentShelf[elementId],
-            shelf: newShelf
-          }
+  //         tempNewShelf.push(book)
+  //         this.setState((prevState) => ({
+  //           ...prevState,
+  //           [newShelf]: tempNewShelf,
+  //         }))
 
-          tempNewShelf.push(tempCurrentShelf[elementId])
-        }
+  //       })
+  //   }
+  //   else {
 
-        tempCurrentShelf.splice(elementId, 1)
+  //     let tempCurrentShelf = [...this.state[currentShelf]]
+  //     if (newShelf !== 'none') {
+  //       tempNewShelf = [...this.state[newShelf]]
 
-        this.setState((prevState) => ({
-          ...prevState,
-          [currentShelf]: tempCurrentShelf,
-          [newShelf]: (newShelf !== 'none') ? tempNewShelf : prevState[newShelf],
-        }))
-      })
-      .catch((err) => console.log("Error updating on server", err))
+  //       tempCurrentShelf[elementId] = {
+  //         shelf: newShelf,
+  //         ...tempCurrentShelf[elementId],
+  //       }
+
+  //       tempNewShelf.push(tempCurrentShelf[elementId])
+
+
+  //     }
+  //     tempCurrentShelf.splice(elementId, 1)
+
+  //     this.setState((prevState) => ({
+  //       ...prevState,
+  //       [currentShelf]: tempCurrentShelf,
+  //       [newShelf]: (newShelf !== 'none') ? tempNewShelf : prevState[newShelf],
+  //     }))
+  //   }
+  // }
+
+  findBookShelf(bookId) {
+    const allBooks = this.getAllBooksArray()
+
+    let bookRec = allBooks.filter((book) => book.id === bookId)
+
+    return (bookRec.length !== 0) ? bookRec[0].shelf : 'none'
   }
 
+  findBooks = (txtInput) => {
+    BooksAPI.search(txtInput)
+      .then((books) => {
 
+        let newBooks = books.map((book) => {
+          book.shelf = this.findBookShelf(book.id)
+          return book
+        })
 
+        this.setState((prevState) => {
+          return ({
+            ...prevState,
+            searchTerm: txtInput,
+            searchResult: newBooks,
+
+          })
+        }
+        )
+      })
+      .catch((err) => {
+        console.log("Error fetching data", err)
+        this.setState({
+          books: [],
+          searchTerm: txtInput
+        })
+      })
+  }
+
+  shelfChangeHandler = (elementId, bookId, currentShelf, newShelf) => {
+    BooksAPI.update({ id: bookId }, newShelf)
+      .then(book => {
+        this.getAlltToState()
+      })
+      .catch((err) => console.log("Error updating shelf", err))
+  }
+
+  componentDidMount() {
+    this.getAlltToState()
+  }
 
   render() {
     return (
       <div className="app" >
         {
           this.state.showSearchPage ? (
-            <SearchComponent />
+            <SearchComponent findBooks={this.findBooks} searchResult={this.state.searchResult} shelfChangeHandler={this.shelfChangeHandler} />
           ) : (
               <div className="list-books">
                 <div className="list-books-title">
