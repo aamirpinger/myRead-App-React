@@ -114,8 +114,8 @@ class BooksApp extends React.Component {
     }
 
     BooksAPI.update(book, newShelf)
-      .then((data) => {
-        console.log("Book shelf changed and updated at server", data)
+      .then(() => {
+        console.log("Book shelf changed and updated at server")
       })
       .catch((err) => {
         console.log("Error updating shelf", err)
@@ -127,7 +127,7 @@ class BooksApp extends React.Component {
           ? this.state[newShelf].filter((rec) => rec.id !== book.id)
           : null
 
-        book.shelf = previousShelf  
+        book.shelf = previousShelf
 
         if (newShelf !== 'none' && previousShelf !== 'none') {
           this.setState((prevState) => ({
