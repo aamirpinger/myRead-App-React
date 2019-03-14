@@ -6,8 +6,11 @@ This is First project in one the final projects from Udacity's React Nano Degree
 $ git clone https://github.com/aamirpinger/myRead-App-React.git
 
 ### Once you have this project on your system
-$ npm install
-$ npm run
+$ cd myRead-App-React/
+
+$ npm install OR yarn
+
+$ npm start OR yarn start
 
 
 
